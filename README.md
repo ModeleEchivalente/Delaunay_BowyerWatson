@@ -17,7 +17,7 @@ Functionality:
 ![](images/b2t.png)
 
 By:
-Mazur Daniela
-Trubca Dmitri
-Ursu Nicolae
+Mazur Daniela,
+Trubca Dmitri,
+Ursu Nicolae,
 Danilescu Alexandru

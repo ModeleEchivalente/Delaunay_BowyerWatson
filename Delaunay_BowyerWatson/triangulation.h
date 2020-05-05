@@ -82,10 +82,12 @@ struct Triangle {
 
 struct VoronoiDelaunay {
      vector<Triangle> delaunayTriangles;   //delaunay triangles 
-     vector<Edge> delaunayEdges;     //edges of delaunay triangulation
-     vector<Edge> voronoiEdges;      //edges of Voronoi diagram
+     vector<Edge> delaunayEdges;           //edges of delaunay triangulation
+     vector<Edge> voronoiEdges;            //edges of Voronoi diagram
 };
 
+//Input: vector of points, width and height of the window
+//Output: Delaunay triangulation of the points and the corresponding Voronoi diagram
 VoronoiDelaunay computeTriangulation(vector<Point> points, int width, int height) {
      if (points.empty()) return VoronoiDelaunay();     
      VoronoiDelaunay D; // contains the edges of the delaunay triangulation
@@ -118,19 +120,19 @@ VoronoiDelaunay computeTriangulation(vector<Point> points, int width, int height
                }
           }
          
-          //detect dublicate edges of bad triangles
-          vector<bool> isDublicate(edges.size(), 0);
+          //detect repeating edges of bad triangles
+          vector<bool> isDuplicate(edges.size(), 0);
           for (auto e1 = edges.begin(); e1 != edges.end(); ++e1) {
                for (auto e2 = e1 + 1; e2 != edges.end(); ++e2) {
                     if (*e1 == *e2) {
-                         isDublicate[e1 - edges.begin()] = 1;
-                         isDublicate[e2 - edges.begin()] = 1;
+                         isDuplicate[e1 - edges.begin()] = 1;
+                         isDuplicate[e2 - edges.begin()] = 1;
                     }
                }
           }
-          //remove dublicate edges
+          //remove repeating edges
           edges.erase(remove_if(edges.begin(), edges.end(),
-               [&](const Edge& e) {return isDublicate[&e - &edges[0]]; }),
+               [&](const Edge& e) {return isDuplicate[&e - &edges[0]]; }),
                edges.end());
 
           //retriangulate the polygonal hole

@@ -13,6 +13,8 @@ Functionality:
 -	Clear window
 -	Inverse color (Light mode/Dark mode)
 
+Programming language: C++
+GUI library: SFML
 
 ![](images/b2t.png)
 

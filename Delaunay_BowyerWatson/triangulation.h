@@ -148,9 +148,7 @@ VoronoiDelaunay computeTriangulation(vector<Point> points, int width, int height
 
      // Add edges of triangles to the Delaunay triangulation vector
      for (auto triangle : VD.delaunayTriangles) {
-          VD.delaunayEdges.push_back(triangle.e1);
-          VD.delaunayEdges.push_back(triangle.e2);
-          VD.delaunayEdges.push_back(triangle.e3);
+          VD.delaunayEdges.insert(VD.delaunayEdges.end(), { triangle.e1, triangle.e2, triangle.e3 });
      }
 
      return VD;

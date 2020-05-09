@@ -19,13 +19,12 @@ struct Point {
      bool operator!=(const Point& other) const {
           return !operator==(other);
      }
-
-     friend std::ostream& operator<<(std::ostream& os, const Point& p) {
-          os << "x=" << p.x << "  y=" << p.y;
-          return os;
-     }
 };
 
+// Cartesian distance between 2 points
+double dist(Point a, Point b) {
+     return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
+}
 
 struct Edge {
      Point p1, p2;
@@ -34,22 +33,12 @@ struct Edge {
      bool operator==(const Edge& other) const {
           return (p1 == other.p1 && p2 == other.p2 || p2 == other.p1 && p1 == other.p2);
      }
-
-
-     friend std::ostream& operator<<(std::ostream& os, const Edge& e) {
-          os << "p1: " << e.p1 << ";  p2: " << e.p2;
-          return os;
-     }
 };
 
 
 struct Circle {
      double x, y, r; // (x, y) - Center of the circle, r - radius 
 };
-
-double dist(Point a, Point b) {
-     return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
-}
 
 struct Triangle {
      Point p1, p2, p3; // vertices of the triangle 
@@ -90,9 +79,9 @@ struct VoronoiDelaunay {
 //Output: Delaunay triangulation of the points and the corresponding Voronoi diagram
 VoronoiDelaunay computeTriangulation(vector<Point> points, int width, int height) {
      if (points.empty()) return VoronoiDelaunay();     
-     VoronoiDelaunay D; // contains the edges of the delaunay triangulation
+     VoronoiDelaunay VD; // contains the edges of the delaunay triangulation and corresponding Voronoi diagram
 
-     /*Create super triangle*/
+     // Create super triangle
      double xmin = 0, ymin = 0, xmax = width, ymax = height;
 
      double dmax = 3 * max(xmax - xmin, ymax - ymin);
@@ -104,20 +93,13 @@ VoronoiDelaunay computeTriangulation(vector<Point> points, int width, int height
      Point p2(xmid + k * dmax, ymid - dmax);
      Point p3(xmid, ymid + k * dmax);
 
-     D.delaunayTriangles.push_back(Triangle(p1, p2, p3)); //insert super triangle into triangulation
-     int nr = 0;
+     VD.delaunayTriangles.push_back(Triangle(p1, p2, p3)); //insert super triangle into triangulation
      for (auto point : points) {   // iterate over the list of points
           vector<Triangle> currTriangulation;
           vector<Edge> edges;      // edges of bad triangles
-          for (auto triangle : D.delaunayTriangles) {
-               if (!triangle.containsPoint(point)) {
-                    currTriangulation.push_back(triangle);
-               }
-               else {
-                    edges.push_back(triangle.e1);
-                    edges.push_back(triangle.e2);
-                    edges.push_back(triangle.e3);
-               }
+          for (auto triangle : VD.delaunayTriangles) {
+               if (!triangle.containsPoint(point)) currTriangulation.push_back(triangle); 
+               else edges.insert(edges.end(), { triangle.e1, triangle.e2, triangle.e3 });
           }
          
           //detect repeating edges of bad triangles
@@ -130,6 +112,7 @@ VoronoiDelaunay computeTriangulation(vector<Point> points, int width, int height
                     }
                }
           }
+
           //remove repeating edges
           edges.erase(remove_if(edges.begin(), edges.end(),
                [&](const Edge& e) {return isDuplicate[&e - &edges[0]]; }),
@@ -139,40 +122,36 @@ VoronoiDelaunay computeTriangulation(vector<Point> points, int width, int height
           for (auto e : edges) {
                currTriangulation.push_back(Triangle(e.p1, e.p2, point));
           }
-          D.delaunayTriangles = currTriangulation;
+          VD.delaunayTriangles = currTriangulation;
      }
 
      // insert the corresponding to the triangulation Voronoi edges 
-     D.voronoiEdges.push_back(Edge(Point(1,1), Point(2,3)));
-     for (auto it = D.delaunayTriangles.begin(); it != D.delaunayTriangles.end(); it++) {
-          for (auto it2 = it + 1; it2 != D.delaunayTriangles.end(); it2++) {
+     VD.voronoiEdges.push_back(Edge(Point(1,1), Point(2,3)));
+     for (auto it = VD.delaunayTriangles.begin(); it != VD.delaunayTriangles.end(); it++) {
+          for (auto it2 = it + 1; it2 != VD.delaunayTriangles.end(); it2++) {
                if (it->e1 == it2->e1 || it->e1 == it2->e2 || it->e1 == it2->e3 ||
                    it->e2 == it2->e1 || it->e2 == it2->e2 || it->e2 == it2->e3 ||
                    it->e3 == it2->e1 || it->e3 == it2->e2 || it->e3 == it2->e3) {
-                    D.voronoiEdges.push_back(Edge({ it->circle.x, it->circle.y }, { it2->circle.x, it2->circle.y }));
+                   VD.voronoiEdges.push_back(Edge({ it->circle.x, it->circle.y }, { it2->circle.x, it2->circle.y }));
                }
           }
      }
 
-
-
-     /* Remove super triangle */
-     for (auto it = D.delaunayTriangles.begin(); it != D.delaunayTriangles.end();) {
-          if (it->p1 == p1 || it->p2 == p1 || it->p3 == p1) it = D.delaunayTriangles.erase(it);
-          else if (it->p1 == p2 || it->p2 == p2 || it->p3 == p2) it = D.delaunayTriangles.erase(it);
-          else if (it->p1 == p3 || it->p2 == p3 || it->p3 == p3) it = D.delaunayTriangles.erase(it);
+     // Remove super triangle 
+     for (auto it = VD.delaunayTriangles.begin(); it != VD.delaunayTriangles.end();) {
+          if (it->p1 == p1 || it->p2 == p1 || it->p3 == p1) it = VD.delaunayTriangles.erase(it);
+          else if (it->p1 == p2 || it->p2 == p2 || it->p3 == p2) it = VD.delaunayTriangles.erase(it);
+          else if (it->p1 == p3 || it->p2 == p3 || it->p3 == p3) it = VD.delaunayTriangles.erase(it);
 
           else ++it;
      }
 
-     /*Add edges of triangles*/
-     for (auto triangle : D.delaunayTriangles) {
-          D.delaunayEdges.push_back(triangle.e1);
-          D.delaunayEdges.push_back(triangle.e2);
-          D.delaunayEdges.push_back(triangle.e3);
+     // Add edges of triangles to the Delaunay triangulation vector
+     for (auto triangle : VD.delaunayTriangles) {
+          VD.delaunayEdges.push_back(triangle.e1);
+          VD.delaunayEdges.push_back(triangle.e2);
+          VD.delaunayEdges.push_back(triangle.e3);
      }
 
-     cout << points.size() <<": "<< '\n';
-
-     return D;
+     return VD;
 }

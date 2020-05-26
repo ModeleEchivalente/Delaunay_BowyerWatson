@@ -286,7 +286,8 @@ int main() {
                               }
                               else if (y >= importBorder.getPosition().y && y <= importBorder.getPosition().y + importBorder.getSize().y) {
                                    cout << "import clicked\n";
-
+                                   points.clear();
+                                   reconstructGUI();
                                    ifstream inFile;
                                    inFile.open("points.txt");
                                    double cX, cY;
